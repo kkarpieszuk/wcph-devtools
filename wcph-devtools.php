@@ -45,5 +45,6 @@ add_action('admin_init', function() {
 add_action('init', function() {
 	if (class_exists('WooCommerce') && class_exists('PriorPrice\HistoryStorage')) {
 		new \WcPriceHistory\WcphDevtools\HistoryImport();
+		new \WcPriceHistory\WcphDevtools\AllHistoryExporter();
 	}
 });

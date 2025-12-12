@@ -36,8 +36,15 @@ class HistoryImport {
 			return;
 		}
 
+		$plugin_url = plugin_dir_url( dirname( __DIR__ ) . '/wcph-devtools.php' );
 		wp_enqueue_script( 'jquery' );
-		wp_add_inline_script( 'jquery', $this->get_admin_js() );
+		wp_enqueue_script(
+			'wc-ph-devtools-history-import',
+			$plugin_url . 'assets/js/history-import.js',
+			[ 'jquery' ],
+			'1.0.0',
+			true
+		);
 		wp_add_inline_style( 'wp-admin', $this->get_admin_css() );
 	}
 
@@ -90,6 +97,10 @@ class HistoryImport {
 
 				<div id="import-result" style="display: none;"></div>
 			</div>
+
+			<?php
+			do_action( 'wc_ph_devtools_admin_page_after_import' );
+			?>
 		</div>
 		<?php
 	}
@@ -252,62 +263,6 @@ class HistoryImport {
 		return false;
 	}
 
-	/**
-	 * Get admin JavaScript.
-	 */
-	private function get_admin_js(): string {
-		return "
-		jQuery(document).ready(function($) {
-			$('#wc-ph-import-form').on('submit', function(e) {
-				e.preventDefault();
-
-				var formData = new FormData();
-				var fileInput = $('#import_file')[0];
-				var targetProduct = $('#target_product').val();
-
-				if (!targetProduct) {
-					alert('Please select a target product');
-					return;
-				}
-
-				if (!fileInput.files[0]) {
-					alert('Please select a file to import');
-					return;
-				}
-
-				var file = fileInput.files[0];
-				var reader = new FileReader();
-
-				reader.onload = function(e) {
-					formData.append('action', 'wc_ph_import_data');
-					formData.append('nonce', $('#wc_ph_import_nonce').val());
-					formData.append('target_product', targetProduct);
-					formData.append('import_data', e.target.result);
-
-					$.ajax({
-						url: ajaxurl,
-						type: 'POST',
-						data: formData,
-						processData: false,
-						contentType: false,
-						success: function(response) {
-							if (response.success) {
-								$('#import-result').html('<div class=\"notice notice-success\"><p>' + response.data.message + '</p></div>').show();
-							} else {
-								$('#import-result').html('<div class=\"notice notice-error\"><p>' + response.data.message + '</p></div>').show();
-							}
-						},
-						error: function() {
-							$('#import-result').html('<div class=\"notice notice-error\"><p>An error occurred during import</p></div>').show();
-						}
-					});
-				};
-
-				reader.readAsText(file);
-			});
-		});
-		";
-	}
 
 	/**
 	 * Get admin CSS.
