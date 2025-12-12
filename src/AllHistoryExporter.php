@@ -69,37 +69,44 @@ class AllHistoryExporter {
 	 * @return array<int> Array of all product and variation IDs.
 	 */
 	public function get_all_products_ids(): array {
+		global $wpdb;
+
 		$all_ids = [];
 
-		// Get all products (simple, variable, etc.)
-		$products = wc_get_products(
-			[
-				'limit'  => -1,
-				'status' => 'publish',
-				'return' => 'ids',
-			]
+		// Get all products using direct SQL query (similar to DbMigration approach)
+		// This ensures we get ALL products, not just published ones
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.DirectQuery
+		$product_ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT p.ID
+				FROM {$wpdb->posts} p
+				WHERE p.post_type = %s
+				AND p.post_status IN ('publish', 'private', 'draft', 'pending', 'future')",
+				'product'
+			)
 		);
 
-		foreach ( $products as $product_id ) {
-			$all_ids[] = $product_id;
-
-			$product = wc_get_product( $product_id );
-
-			if ( ! $product ) {
-				continue;
-			}
-
-			// If product is variable, get all variation IDs
-			if ( $product->is_type( 'variable' ) ) {
-				$variation_ids = $product->get_children();
-
-				foreach ( $variation_ids as $variation_id ) {
-					$all_ids[] = $variation_id;
-				}
-			}
+		foreach ( $product_ids as $product_id ) {
+			$all_ids[] = (int) $product_id;
 		}
 
-		return $all_ids;
+		// Get all product variations using direct SQL query
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.DirectQuery
+		$variation_ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT p.ID
+				FROM {$wpdb->posts} p
+				WHERE p.post_type = %s
+				AND p.post_status IN ('publish', 'private', 'draft', 'pending', 'future')",
+				'product_variation'
+			)
+		);
+
+		foreach ( $variation_ids as $variation_id ) {
+			$all_ids[] = (int) $variation_id;
+		}
+
+		return array_unique( $all_ids );
 	}
 
 	/**
