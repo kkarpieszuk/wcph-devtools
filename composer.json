@@ -1,0 +1,18 @@
+{
+    "name": "wc-price-history/wcph-devtools",
+    "description": "Dev Tools for WC Price History.",
+    "type": "project",
+    "license": "GPLv2",
+    "autoload": {
+        "psr-4": {
+            "WcPriceHistory\\WcphDevtools\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Konrad Karpieszuk",
+            "email": "kkarpieszuk@gmail.com"
+        }
+    ],
+    "require": {}
+}
